@@ -3670,7 +3670,7 @@ QTab:AddToggle({
 
 
 
-settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
 
 
 OrionLib:Init()
