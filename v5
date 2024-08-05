@@ -3660,6 +3660,21 @@ QTab:AddToggle({
 })
 
 
+import requests
+import json
+from datetime import datetime
+
+def send_discord_webhook_log(data):
+    url = 'https://discord.com/api/webhooks/1268868581534204017/dLDobd22rFJ4jrw-CaUz4BGPAXc8ZbI-WkEAQ46_2YPvhJwlJ_croDhAnIjOBLwhDy02'
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        'content': f'Script injected: {json.dumps(data)}'
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(payload))
+    print('Response:', response.status_code)
+
+# Call this function when the script is injected
+send_discord_webhook_log({'event': 'script_injected', 'timestamp': datetime.utcnow().isoformat()})
 
 
 
