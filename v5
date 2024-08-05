@@ -783,14 +783,7 @@ if Local_Player.Character then
     onCharacterAdded(Local_Player.Character)
 end
 
--- // Initial Notification // --
-sendNotification("therealosdee", "", "rbxassetid://17561420493")
-wait(2)
-sendNotification("therealosdee", "♣️ Supports Solara", "rbxassetid://17561420493")
---[[ 
 
-Go get to Skidding !! Source Made By @wxrpedd & @canyoulovemeback on Discord,
-Everything is from scrap took us like 10 mins to make this so have fun.
 
 --]]
 --[[
