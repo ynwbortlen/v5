@@ -3660,14 +3660,6 @@ QTab:AddToggle({
 })
 
 
-from multiprocessing import Pool
-
-def task(n):
-    return n * n
-
-with Pool(5) as p:
-    print(p.map(task, [1, 2, 3, 4, 5]))
-
 
 
 
