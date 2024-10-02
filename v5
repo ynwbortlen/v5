@@ -1,5 +1,74 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "TRAPPED V3", HidePremium = false, IntroEnabled = false,IntroText = TRAPPEDV2, SaveConfig = true, ConfigFolder = "TRAPPEDV2"})
+local Window = OrionLib:MakeWindow({Name = "TRAPPEDV4", HidePremium = false, IntroEnabled = false,IntroText = TRAPPEDV2, SaveConfig = true, ConfigFolder = "TRAPPEDV2"})
+ 
+
+-- Variables
+local triggerBotEnabled = false
+local holdKey = "E" -- Change this to your preferred key
+local toggleKey = "Q" -- Change this to your preferred key
+
+-- Function to find the closest target
+local function findClosestTarget()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (player.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+            if distance < shortestDistance then
+                closestPlayer = player
+                shortestDistance = distance
+            end
+        end
+    end
+    return closestPlayer
+end
+
+-- Trigger Bot Function
+local function triggerBot()
+    while triggerBotEnabled do
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode[holdKey]) then
+            local target = findClosestTarget()
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+            end
+        else
+            game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame) -- Ensure shooting stops
+        end
+        wait(0.01) -- Very short delay to prevent script from crashing
+    end
+    game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame) -- Ensure shooting stops
+end
+
+-- Keybinds
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        if input.KeyCode == Enum.KeyCode[toggleKey] then
+            triggerBotEnabled = not triggerBotEnabled
+            if triggerBotEnabled then
+                OrionLib:MakeNotification({
+                    Name = "Trigger Bot",
+                    Content = "Trigger Bot Enabled",
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
+                triggerBot()
+            else
+                OrionLib:MakeNotification({
+                    Name = "Trigger Bot",
+                    Content = "Trigger Bot Disabled",
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
+            end
+        end
+    end
+end)
+
+game:GetService("UserInputService").InputEnded:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode[holdKey] then
+        game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame) -- Ensure shooting stops
+    end
+end)
 
 
 local Tab = Window:MakeTab({
@@ -845,28 +914,52 @@ Name = <string> - The name of the button.
 Callback = <function> - The function of the button.
 ]]
 
-Tab:AddButton({
-	Name = "Auto Reload",
-	Callback = function()
-		_G.AutoReload = true -- change to false if u don't want it anymore.
 
-while _G.AutoReload == true and game:GetService("RunService").Heartbeat:Wait() do
-if game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool") then
-            if game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool"):FindFirstChild("Ammo") then
-                if game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool"):FindFirstChild("Ammo").Value <= 0 then
-                    game:GetService("ReplicatedStorage").MainEvent:FireServer("Reload", game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool")) 
-                    wait(1)
-                end
-            end
-        end
-end
-  	end    
+Tab:AddToggle({
+    Name = "Auto Reload",
+    Default = false,
+    Callback = function(Value)
+        _G.AutoReload = Value
+    end    
 })
 
---[[
-Name = <string> - The name of the button.
-Callback = <function> - The function of the button.
-]]
+_G.AutoReload = false -- Default state
+
+game:GetService("RunService").Heartbeat:Connect(function()
+    if _G.AutoReload and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool") then
+        local tool = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
+        if tool:FindFirstChild("Ammo") and tool.Ammo.Value <= 0 then
+            game:GetService("ReplicatedStorage").MainEvent:FireServer("Reload", tool)
+            wait(1)
+        end
+    end
+end)
+  	
+
+
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RATE_PER_SECOND = 2
+
+local toggleState = false
+
+
+   Tab:AddToggle({
+    Name = "Auto Stommp",
+    Default = false,
+    Save = true,
+    Flag = "ScriptToggle",
+    Callback = function(value)
+        toggleState = value
+    end
+})
+
+RunService.Stepped:Connect(function(time, step)
+    if toggleState then
+        ReplicatedStorage.MainEvent:FireServer("Stomp")
+    end
+end)
+
 
 Tab:AddButton({
 	Name = "Trash Talk(J)",
@@ -1072,10 +1165,7 @@ local hrp = CPlayer.Character.HumanoidRootPart
   	end    
 })
 
---[[
-Name = <string> - The name of the button.
-Callback = <function> - The function of the button.
-]]
+
 
 
 Tab:AddToggle({
@@ -1125,53 +1215,64 @@ game:GetService('RunService'):BindToRenderStep("Auto-Block", 0, function()
     end
 end)
 
-Tab:AddButton({
+
+
+local CTab = Window:MakeTab({
+	Name = "CFRAME",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+
+CTab:AddButton({
     Name = "CFrame Speed (Z)",
     Callback = function()
         repeat wait() until game:IsLoaded()
-        local L_134_ = game:service('Players')
-        local L_135_ = L_134_.LocalPlayer
-        repeat wait() until L_135_.Character
-        local L_136_ = game:service('UserInputService')
-        local L_137_ = game:service('RunService')
+        local Players = game:service('Players')
+        local LocalPlayer = Players.LocalPlayer
+        repeat wait() until LocalPlayer.Character
+        local UserInputService = game:service('UserInputService')
+        local RunService = game:service('RunService')
         getgenv().Multiplier = 0.5
-        local L_138_ = true
-        local L_139_
-        L_136_.InputBegan:connect(function(L_140_arg0)
-            if L_140_arg0.KeyCode == Enum.KeyCode.LeftBracket then
+        local isActive = true
+
+        UserInputService.InputBegan:connect(function(input)
+            if input.KeyCode == Enum.KeyCode.LeftBracket then
                 Multiplier = Multiplier + 0.01
                 print(Multiplier)
                 wait(0.2)
-                while L_136_:IsKeyDown(Enum.KeyCode.LeftBracket) do
+                while UserInputService:IsKeyDown(Enum.KeyCode.LeftBracket) do
                     wait()
                     Multiplier = Multiplier + 0.01
                     print(Multiplier)
                 end
             end
-            if L_140_arg0.KeyCode == Enum.KeyCode.RightBracket then
+            if input.KeyCode == Enum.KeyCode.RightBracket then
                 Multiplier = Multiplier - 0.01
                 print(Multiplier)
                 wait(0.2)
-                while L_136_:IsKeyDown(Enum.KeyCode.RightBracket) do
+                while UserInputService:IsKeyDown(Enum.KeyCode.RightBracket) do
                     wait()
                     Multiplier = Multiplier - 0.01
                     print(Multiplier)
                 end
             end
-            if L_140_arg0.KeyCode == Enum.KeyCode.Z then
-                L_138_ = not L_138_
-                if L_138_ == true then
-                    repeat
-                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + game.Players.LocalPlayer.Character.Humanoid.MoveDirection * Multiplier
-                        game:GetService("RunService").Stepped:wait()
-                    until L_138_ == false
-                end
+            if input.KeyCode == Enum.KeyCode.Z then
+                isActive = not isActive
+            end
+        end)
+
+        RunService.Heartbeat:Connect(function()
+            if isActive then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.Humanoid.MoveDirection * getgenv().Multiplier
             end
         end)
     end
 })
 
-Tab:AddSlider({
+
+
+CTab:AddSlider({
     Name = "CFrame Speed",
     Min = 0,
     Max = 5,
@@ -1183,6 +1284,167 @@ Tab:AddSlider({
         getgenv().Multiplier = s
     end
 })
+
+local isEnabled = false  -- Initialize to false to prevent CFrame manipulation on script injection
+
+
+local isFlying = false
+local targetPlayerName = ""
+local flySpeed = 1  -- Default fly speed
+local circleSpeed = 1  -- Speed of circling around the player's head
+local verticalSpeed = 1  -- Speed of moving vertically
+local radius = 10  -- Radius of the circle
+
+CTab:AddBind({
+    Name = "Toggle Fly",
+    Default = Enum.KeyCode.V,
+    Hold = false,
+    Callback = function()
+        isFlying = not isFlying
+    end
+})
+
+local playerDropdown
+
+local function updatePlayerDropdown()
+    local players = game.Players:GetPlayers()
+    local playerNames = {}
+    for _, player in ipairs(players) do
+        table.insert(playerNames, player.DisplayName .. " (" .. player.Name .. ")")
+    end
+    playerDropdown:Refresh(playerNames, true)
+end
+
+playerDropdown = CTab:AddDropdown({
+    Name = "Target Player Name",
+    Default = "",
+    Options = {},
+    Callback = function(value)
+        targetPlayerName = value:match("%((.-)%)")
+    end
+})
+
+CTab:AddSlider({
+    Name = "Fly Speed",
+    Min = 0,
+    Max = 5,
+    Default = 1,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 0.1,
+    ValueName = "Speed",
+    Callback = function(value)
+        flySpeed = value
+    end
+})
+
+CTab:AddSlider({
+    Name = "Circle Speed",
+    Min = 0,
+    Max = 5,
+    Default = 1,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 0.1,
+    ValueName = "Speed",
+    Callback = function(value)
+        circleSpeed = value
+    end
+})
+
+CTab:AddSlider({
+    Name = "Vertical Speed",
+    Min = 0,
+    Max = 50,  -- Increased max value for higher altitude
+    Default = 1,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 0.1,
+    ValueName = "Speed",
+    Callback = function(value)
+        verticalSpeed = value
+    end
+})
+
+local function getNearestPlayerByName(name)
+    local players = game.Players:GetPlayers()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    local localPlayer = game.Players.LocalPlayer
+    local localCharacter = localPlayer.Character
+    local localHumanoidRootPart = localCharacter and localCharacter:FindFirstChild("HumanoidRootPart")
+
+    if localHumanoidRootPart then
+        for _, player in ipairs(players) do
+            if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Name:lower():find(name:lower()) then
+                local distance = (localHumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    closestPlayer = player
+                    shortestDistance = distance
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local mouse = player:GetMouse()
+
+local isMoving = false
+local angle = 0
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.W then
+        isMoving = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.W then
+        isMoving = false
+    end
+end)
+
+mouse.Button1Down:Connect(function()
+    local targetPlayer = getNearestPlayerByName(targetPlayerName)
+    if targetPlayer then
+        targetPlayerName = targetPlayer.Name
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if isEnabled and getgenv().Multiplier and isMoving then
+        humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.new(0, 0, -getgenv().Multiplier)
+    end
+
+    if isFlying and targetPlayerName ~= "" then
+        local nearestPlayer = game.Players:FindFirstChild(targetPlayerName)
+        if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            angle = angle + circleSpeed * 0.1
+            local targetPosition = nearestPlayer.Character.HumanoidRootPart.Position + Vector3.new(math.cos(angle) * radius, 10 + verticalSpeed, math.sin(angle) * radius)
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame:Lerp(CFrame.new(targetPosition), flySpeed * 0.1)
+        end
+    end
+end)
+
+game.Players.PlayerAdded:Connect(function(newPlayer)
+    updatePlayerDropdown()
+end)
+
+game.Players.PlayerRemoving:Connect(function(leavingPlayer)
+    updatePlayerDropdown()
+end)
+
+player.CharacterAdded:Connect(function(char)
+    character = char
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+end)
+
+updatePlayerDropdown()
+
 
 
 Tab:AddButton({
@@ -2778,6 +3040,18 @@ Name = <string> - The name of the button.
 Callback = <function> - The function of the button.
 ]]
 
+XTab:AddButton({
+	Name = "Zombie Animation",
+	Callback = function()
+      	while true do
+local Animate = game.Players.LocalPlayer.Character.Animate
+Animate.walk.WalkAnim.AnimationId = "http://www.roblox.com/asset/?id=616168032"
+Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=616163682"
+game.Players.LocalPlayer.Character.Humanoid.Jump = false
+wait(1)
+end
+  	end    
+})
 
 
 XTab:AddToggle({
@@ -2864,7 +3138,7 @@ Callback = <function> - The function of the button.
 ]]
 
 local QTab = Window:MakeTab({
-	Name = "ESP",
+	Name = "Visuals",
 	Icon = "rbxassetid://4483345998",
 	PremiumOnly = false
 })
@@ -3283,79 +3557,8 @@ local LTab = Window:MakeTab({
 	PremiumOnly = false
 })
 
-LTab:AddButton({
-	Name = "Cash Aura",
-	Callback = function()
-		while wait() do
 
 
-			local function getMoneyAroundMe() 
-				for i, money in ipairs(game.Workspace.Ignored.Drop:GetChildren()) do
-					if money.Name == "MoneyDrop" and (money.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 20 then
-						fireclickdetector(money.ClickDetector)
-					end  
-				end
-			end
-			
-			 getMoneyAroundMe()
-			end
-  	end    
-})
-
-
-LTab:AddButton({
-	Name = "Visual Cash (Client Sided)",
-	Callback = function()
-		-- // Vars
-local Workspace = game.Workspace
-local Ignored = Workspace.Ignored
-local Drops = Ignored.Drop
-local LocalPlayer = game.Players.LocalPlayer
-local Char = LocalPlayer.Character
-local Hum = Char.HumanoidRootPart
-local AMT = 10000
-game.ReplicatedStorage.MainEvent:FireServer("DropMoney",AMT)
-while wait(2.10) do
-for i, v in pairs(Drops:GetChildren()) do
-    if v.Name == "MoneyDrop" and (Hum.Position - v.Position).Magnitude < 20 then
-        local clo = v:Clone()
-        wait()
-        clo.Parent = Drops
-        clo.Position = Hum.Position
-        clo.CFrame = Hum.CFrame
-        wait()
-        game:GetService("Players").LocalPlayer.DataFolder.Currency.Value = game:GetService("Players").LocalPlayer.DataFolder.Currency.Value - 10000
-        if game:GetService("Players").LocalPlayer.DataFolder.Currency.Value < 10000 then
-            break
-        end
-    end
-end
-end
-wait()
-    end,
-})
-				
-
-
-
-LTab:AddButton({
-	Name = "Auto Farm",
-	Callback = function()
-		_G.AutofarmSettings = { 
-			Fps = 10, --// anything above 3 should be good, 10+ if you want to make the most cash.
-			Saver = true, --// black screen to save usage, shows wallet, timer, broken atms, profit.
-		}
-		loadstring(game:HttpGet("https://femboy.edu.pl/p/raw/0txodhcaxm"))()
-  	end    
-})
-
-
-LTab:AddButton({
-	Name = "Cash Counter",
-	Callback = function()
-		loadstring(game:HttpGet('https://raw.githubusercontent.com/W9K/Da-Hood-Scripts/main/Cash_Counter.lua', true))()
-  	end    
-})
 
 
 
@@ -3394,7 +3597,7 @@ local function toggleESP(state)
     end
 end
 
-LTab:AddToggle({
+QTab:AddToggle({
     Name = "Cash Esp",
     Default = false,
     Save = true,
@@ -3477,6 +3680,24 @@ LTab:AddButton({
     end
 })
 
+local InfoTab = Window:MakeTab({
+    Name = "Auto Buy",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+InfoTab:AddLabel("Coming Soon")
+
+
+
+local InfoTab = Window:MakeTab({
+    Name = "Information",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+InfoTab:AddLabel("Q TO TURN TRIGGERBOT OFF/ON")
+InfoTab:AddParagraph("Details", "Please Message Me On Discord For Any Bugs Or Help Therealosdee")
 
 
 
@@ -3658,6 +3879,7 @@ QTab:AddToggle({
         end
     end    
 })
+
 
 
 
