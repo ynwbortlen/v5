@@ -4,7 +4,7 @@ local Window = OrionLib:MakeWindow({Name = "TRAPPEDV4", HidePremium = false, Int
 
 -- Variables
 local triggerBotEnabled = false
-local holdKey = "E" -- Change this to your preferred key
+local holdKey = "N" -- Change this to your preferred key
 local toggleKey = "Q" -- Change this to your preferred key
 
 -- Function to find the closest target
